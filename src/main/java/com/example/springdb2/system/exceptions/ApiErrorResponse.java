@@ -1,11 +1,13 @@
 package com.example.springdb2.system.exceptions;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.Map;
 
 public record ApiErrorResponse(
-        LocalDateTime localDate,
-        String message,
+        OffsetDateTime timestamp,
         int status,
-        Map<String, Object> details
-){}
+        String error,
+        String message,
+        String path,
+        Map<String, String> fieldErrors
+) {}

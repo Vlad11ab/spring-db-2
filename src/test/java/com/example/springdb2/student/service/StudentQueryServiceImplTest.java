@@ -1,7 +1,10 @@
 package com.example.springdb2.student.service;
 
+import com.example.springdb2.config.security.PermissionGroup;
+import com.example.springdb2.config.security.UserPermission;
 import com.example.springdb2.student.dtos.StudentResponse;
 import com.example.springdb2.student.exceptions.StudentNotFoundException;
+import com.example.springdb2.student.mappers.StudentMapper;
 import com.example.springdb2.student.model.Student;
 import com.example.springdb2.student.repository.StudentRepository;
 import com.example.springdb2.student.service.query.StudentQueryService;
@@ -11,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 
 import java.util.Collections;
 import java.util.List;
@@ -29,7 +33,7 @@ public class StudentQueryServiceImplTest {
 
     @BeforeEach()
     void setUp(){
-        studentQueryService = new StudentQueryServiceImpl(studentRepository);
+        studentQueryService = new StudentQueryServiceImpl(studentRepository, new StudentMapper(PasswordEncoderFactories.createDelegatingPasswordEncoder()));
     }
 
     @Test
@@ -90,10 +94,12 @@ public class StudentQueryServiceImplTest {
                         "Andrei",
                         "Popescu",
                         "andrei.popescu@example.com",
-                        "parolaSigura123",
                         20,
                         60,
                         30,
+                        Collections.emptySet(),
+                        Collections.emptySet(),
+                        Collections.emptySet(),
                         Collections.emptyList()
                 ),
                 new StudentResponse(
@@ -101,10 +107,12 @@ public class StudentQueryServiceImplTest {
                         "Maria",
                         "Ionescu",
                         "maria.ionescu@facultate.ro",
-                        "studentEminent22",
                         22,
                         180,
                         180,
+                        Collections.emptySet(),
+                        Collections.emptySet(),
+                        Collections.emptySet(),
                         Collections.emptyList()
                 ),
                 new StudentResponse(
@@ -112,10 +120,12 @@ public class StudentQueryServiceImplTest {
                         "Alexandru",
                         "Radu",
                         "alexandru.radu@test.com",
-                        "qwertyuiop",
                         19,
                         60,
                         0,
+                        Collections.emptySet(),
+                        Collections.emptySet(),
+                        Collections.emptySet(),
                         Collections.emptyList()
                 ),
                 new StudentResponse(
@@ -123,10 +133,12 @@ public class StudentQueryServiceImplTest {
                         "Elena",
                         "Dumitrescu",
                         "elena.d@campus.ro",
-                        "secretdent",
                         21,
                         120,
                         90,
+                        Collections.emptySet(),
+                        Collections.emptySet(),
+                        Collections.emptySet(),
                         Collections.emptyList()
                 ),
                 new StudentResponse(
@@ -134,10 +146,12 @@ public class StudentQueryServiceImplTest {
                         "Cristian",
                         "Vasile",
                         "cristi.vasile@mail.com",
-                        "masterat2024",
                         24,
                         120,
                         120,
+                        Collections.emptySet(),
+                        Collections.emptySet(),
+                        Collections.emptySet(),
                         Collections.emptyList()
                 )
         );
@@ -169,10 +183,12 @@ public class StudentQueryServiceImplTest {
                 "Andrei",
                 "Popescu",
                 "andrei.popescu@example.com",
-                "parolaSigura123",
                 20,
                 60,
                 30,
+                Collections.emptySet(),
+                Collections.emptySet(),
+                Collections.emptySet(),
                 Collections.emptyList());
 
         when(studentRepository.findById(1L)).thenReturn(Optional.ofNullable(student));

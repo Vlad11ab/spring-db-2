@@ -23,6 +23,6 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
 
     Optional<Student> findByEmail(String email);
 
-    @Query("select (count(s)>0) from Student s where lower(s.email) = :email")
-    boolean existsByEmailJQPL(@Param("email") String email);
+    @Query("select (count(s)>0) from Student s where lower(s.email) = lower(:email)")
+    boolean existsByEmailJpql(@Param("email") String email);
 }

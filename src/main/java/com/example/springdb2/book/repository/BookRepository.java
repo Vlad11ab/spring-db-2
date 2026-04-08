@@ -8,6 +8,6 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface BookRepository extends JpaRepository<Book, Long> {
-    @Query("select (count(b)>0) from Book b where lower(b.name) = :name")
+    @Query("select (count(b)>0) from Book b where lower(b.name) = lower(:name)")
     boolean existsByNameIgnoreCase(@Param ("name") String name);
 }

@@ -15,22 +15,19 @@ import java.util.Optional;
 @Component
 public class StudentQueryServiceImpl implements StudentQueryService {
 
-    private StudentRepository studentRepository;
-    private StudentMapper studentMapper;
+    private final StudentRepository studentRepository;
+    private final StudentMapper studentMapper;
 
-    public StudentQueryServiceImpl(StudentRepository studentRepository){
-     this.studentRepository = studentRepository;
-
-//     this.getAllStudents();
-//        this.getStudentById(102L);
-//        this.findByEmail("vlad@gmail.com");
+    public StudentQueryServiceImpl(StudentRepository studentRepository, StudentMapper studentMapper){
+        this.studentRepository = studentRepository;
+        this.studentMapper = studentMapper;
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<StudentResponse> getAllStudents() {
         return studentRepository.findAll().stream()
-                .map(StudentMapper::toDto)
+                .map(studentMapper::toDto)
                 .toList();
     }
 
@@ -45,9 +42,6 @@ public class StudentQueryServiceImpl implements StudentQueryService {
 
     @Override
     public Optional<Student> findByEmail(String email) {
-        System.out.println("gasit");
         return studentRepository.findByEmail(email);
     }
-
-
 }

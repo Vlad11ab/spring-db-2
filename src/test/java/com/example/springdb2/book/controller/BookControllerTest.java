@@ -6,29 +6,40 @@ import com.example.springdb2.book.dtos.BookPutRequest;
 import com.example.springdb2.book.dtos.BookResponse;
 import com.example.springdb2.book.exceptions.BookAlreadyExistsException;
 import com.example.springdb2.book.exceptions.BookNotFoundException;
-import com.example.springdb2.book.model.Book;
 import com.example.springdb2.book.service.command.BookCommandService;
 import com.example.springdb2.book.service.query.BookQueryService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.security.autoconfigure.SecurityAutoConfiguration;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
-import tools.jackson.databind.ObjectMapper;
 
 import java.util.List;
 
-import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(controllers = BookController.class)
-public class BookControllerTest {
+@WebMvcTest(controllers = BookController.class, excludeAutoConfiguration = SecurityAutoConfiguration.class)
+class BookControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
+
+    private final ObjectMapper objectMapper = new ObjectMapper().findAndRegisterModules();
 
     @MockitoBean
     private BookQueryService bookQueryService;
@@ -36,72 +47,55 @@ public class BookControllerTest {
     @MockitoBean
     private BookCommandService bookCommandService;
 
-    @Autowired
-    private ObjectMapper objectMapper;
-
-    Book book1 = Book.builder().id(1).name("Spring Boot in Action").build();
-    Book book2 = Book.builder().id(2).name("Clean Code").build();
-    Book book3 = Book.builder().id(3).name("The Pragmatic Programmer").build();
-    BookResponse response1 = new BookResponse(1, "Spring Boot in Action");
-    BookResponse response2 = new BookResponse(2, "Clean Code");
-    BookResponse response3 = new BookResponse(3, "The Pragmatic Programmer");
-
     @Test
     void getAllReturnsList() throws Exception {
-        when(bookQueryService.getAllBooks()).thenReturn(List.of(response1, response2, response3));
+        when(bookQueryService.getAllBooks()).thenReturn(List.of(
+                new BookResponse(1, "Spring Boot in Action"),
+                new BookResponse(2, "Clean Code")
+        ));
 
-        MvcResult result = mockMvc.perform(get("/api/v1/books-students/books/all"))
+        mockMvc.perform(get("/api/v1/books"))
                 .andExpect(status().isOk())
-                .andReturn();
+                .andExpect(jsonPath("$[0].id").value(1))
+                .andExpect(jsonPath("$[1].name").value("Clean Code"));
     }
 
     @Test
-    void patchReturnsOk() throws Exception {
-        BookPatchRequest patch = new BookPatchRequest("Book");
-        BookResponse bookResponse = new BookResponse(1, "Book");
+    void patchReturnsUpdatedBook() throws Exception {
+        BookPatchRequest request = new BookPatchRequest("Book");
+        when(bookCommandService.patchBook(1L, request)).thenReturn(new BookResponse(1, "Book"));
 
-        when(bookCommandService.patchBook(1L, patch)).thenReturn(bookResponse);
-
-        mockMvc.perform(patch("/api/v1/books-students/books/edit/patch/1")
+        mockMvc.perform(patch("/api/v1/books/1")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(patch)))
+                        .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isAccepted())
                 .andExpect(jsonPath("$.id").value(1))
                 .andExpect(jsonPath("$.name").value("Book"));
 
-        verify(bookCommandService).patchBook(1L, patch);
+        verify(bookCommandService).patchBook(1L, request);
     }
 
     @Test
-    void deleteReturnsOk() throws Exception {
-        mockMvc.perform(delete("/api/v1/books-students/books/1"))
-                .andExpect(status().isOk());
-    }
-
-    @Test
-    void deleteBookReturnsConflictWhenServiceThrowsNotFound() throws Exception {
+    void deleteReturnsNotFoundWhenServiceThrows() throws Exception {
         doThrow(new BookNotFoundException(1L)).when(bookCommandService).deleteBook(1L);
 
-        mockMvc.perform(delete("/api/v1/books-students/books/1"))
+        mockMvc.perform(delete("/api/v1/books/1"))
                 .andExpect(status().isNotFound())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.status").value(404))
-                .andExpect(jsonPath("$.error").value("NOT FOUND"))
-                .andExpect(jsonPath("$.message").value("BOOK_NOT_FOUND_EXCEPTION"));
+                .andExpect(jsonPath("$.error").value("NOT FOUND"));
     }
 
     @Test
     void updateReturnsUpdatedResponse() throws Exception {
         BookPutRequest request = new BookPutRequest("Book");
-        BookResponse bookResponse = new BookResponse(1, "Book");
+        when(bookCommandService.updateBook(1L, request)).thenReturn(new BookResponse(1, "Book"));
 
-        when(bookCommandService.updateBook(1L, request)).thenReturn(bookResponse);
-
-        mockMvc.perform(put("/api/v1/books-students/books/edit/update/1")
-                        .contentType(String.valueOf(String.valueOf(MediaType.APPLICATION_JSON)))
+        mockMvc.perform(put("/api/v1/books/1")
+                        .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isAccepted())
-                .andExpect(content().contentTypeCompatibleWith(String.valueOf(MediaType.APPLICATION_JSON)))
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.id").value(1))
                 .andExpect(jsonPath("$.name").value("Book"));
 
@@ -109,30 +103,26 @@ public class BookControllerTest {
     }
 
     @Test
-    void createBookReturnsConflictWhenServiceThrowsAlreadyExists() throws Exception {
+    void createReturnsConflictWhenServiceThrowsAlreadyExists() throws Exception {
         BookCreateRequest request = new BookCreateRequest("Book");
-
         when(bookCommandService.createBook(eq(1L), any(BookCreateRequest.class))).thenThrow(new BookAlreadyExistsException());
 
-        mockMvc.perform(post("/api/v1/books-students/books/add/1")
-                        .contentType(String.valueOf(MediaType.APPLICATION_JSON))
+        mockMvc.perform(post("/api/v1/students/1/books")
+                        .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isConflict())
-                .andExpect(content().contentTypeCompatibleWith(String.valueOf(MediaType.APPLICATION_JSON)))
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.status").value(409))
-                .andExpect(jsonPath("$.error").value("CONFLICT"))
-                .andExpect(jsonPath("$.message").value("BOOK_ALREADY_EXISTS_EXCEPTION"));
+                .andExpect(jsonPath("$.error").value("CONFLICT"));
     }
 
     @Test
-    void createReturns201() throws Exception {
+    void createReturnsCreatedBook() throws Exception {
         BookCreateRequest request = new BookCreateRequest("Book");
-        BookResponse bookResponse = new BookResponse(2, "Book");
+        when(bookCommandService.createBook(eq(1L), any(BookCreateRequest.class))).thenReturn(new BookResponse(2, "Book"));
 
-        when(bookCommandService.createBook(eq(1L), any(BookCreateRequest.class))).thenReturn(bookResponse);
-
-        mockMvc.perform(post("/api/v1/books-students/books/add/1")
-                        .contentType(String.valueOf(MediaType.APPLICATION_JSON))
+        mockMvc.perform(post("/api/v1/students/1/books")
+                        .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").value(2))

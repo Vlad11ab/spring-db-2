@@ -56,10 +56,6 @@
                 <version>2.8.9</version>
             </dependency>
             <dependency>
-                <groupId>org.liquibase</groupId>
-                <artifactId>liquibase-core</artifactId>
-            </dependency>
-            <dependency>
                 <groupId>io.jsonwebtoken</groupId>
                 <artifactId>jjwt-api</artifactId>
                 <version>0.13.0</version>
@@ -78,6 +74,16 @@
             <dependency>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-starter-test</artifactId>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-webmvc-test</artifactId>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework.security</groupId>
+                <artifactId>spring-security-test</artifactId>
                 <scope>test</scope>
             </dependency>
             <dependency>

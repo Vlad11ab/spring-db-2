@@ -8,5 +8,6 @@ public interface StudentCommandService {
     StudentCreateResponse createStudent(StudentCreateRequest req);
     StudentResponse patchStudent(Long studentId, StudentPatchRequest req);
     StudentResponse updateStudent(Long studentId, StudentPutRequest req);
+    StudentResponse updatePermissions(Long studentId, StudentPermissionsUpdateRequest req);
     StudentResponse deleteStudent(Long studentId);
 }

@@ -14,14 +14,17 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name = "book")
+@Table(
+        name = "book",
+        uniqueConstraints = @UniqueConstraint(name = "uk_book_name", columnNames = "book_name")
+)
 public class Book {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private int id;
 
-    @Column(name = "book_name")
+    @Column(name = "book_name", unique = true)
     @NotBlank
     @Size(min = 3, max = 50, message = "size 3-50")
     private String name;
