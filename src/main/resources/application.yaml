@@ -26,7 +26,7 @@ application:
   jwt:
     tokenPrefix: "Bearer "
     tokenExpirationAfterDays: 7
-    secretKey: ${JWT_SECRET_KEY:asdasdasdasdasd123344asdasdasdasdasasd12321332sadas}
+    secretKey: ${JWT_SECRET_KEY:asdasdasdasdasd123344asdasdasdasdasasd12321332sadasXYZ0123456789ABCDEF}
   bootstrap-admin:
     enabled: ${BOOTSTRAP_ADMIN_ENABLED:true}
     firstName: ${BOOTSTRAP_ADMIN_FIRST_NAME:Super}

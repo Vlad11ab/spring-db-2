@@ -21,7 +21,8 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
     @EntityGraph(attributePaths = "books")
     Optional<Student> findById(Long studentId);
 
-    Optional<Student> findByEmail(String email);
+    @Query("SELECT s FROM Student s WHERE LOWER(s.email) = LOWER(:email)")
+    Optional<Student> findByEmail(@Param("email") String email);
 
     @Query("select (count(s)>0) from Student s where lower(s.email) = lower(:email)")
     boolean existsByEmailJpql(@Param("email") String email);

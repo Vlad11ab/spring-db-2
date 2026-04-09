@@ -2,7 +2,6 @@ package com.example.springdb2.config.jwt;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -36,13 +35,13 @@ public class JWTTokenProvider {
     public String generateToken(UserDetails user){
         String[] claims = getClaimsFromUser(user);
         return Jwts.builder()
-                .setIssuer(ISSUER)
-                .setAudience(AUDIENCE)
-                .setIssuedAt(new Date())
-                .setSubject(user.getUsername())
+                .issuer(ISSUER)
+                .audience().add(AUDIENCE).and()
+                .issuedAt(new Date())
+                .subject(user.getUsername())
                 .claim(AUTHORITIES, claims)
-                .setExpiration(new Date(System.currentTimeMillis() + tokenExpirationAfterDays * 24 * 60 * 60 * 1000))
-                .signWith(getSigningKey(), SignatureAlgorithm.HS512)
+                .expiration(new Date(System.currentTimeMillis() + tokenExpirationAfterDays * 24 * 60 * 60 * 1000))
+                .signWith(getSigningKey(), Jwts.SIG.HS512)
                 .compact();
     }
 
@@ -86,10 +85,10 @@ public class JWTTokenProvider {
 
     private Claims getClaims(String token) {
         return Jwts.parser()
-                .setSigningKey(getSigningKey())
+                .verifyWith(getSigningKey())
                 .build()
-                .parseClaimsJws(token)
-                .getBody();
+                .parseSignedClaims(token)
+                .getPayload();
     }
 
     private SecretKey getSigningKey() {
